@@ -34,7 +34,18 @@ contract Families {
         owner = msg.sender;
     }
 
-    event FamilyAdded(uint256 indexed id, string name, address indexed who);
+    event FamilyAdded(
+        uint256 indexed id,
+        string name,
+        address indexed personAccount
+    );
+    event PersonAdded(
+        uint256 indexed id,
+        address indexed account,
+        string name,
+        string avatar
+    );
+    event JoinedFamily(uint256 indexed familyID, uint256 indexed personID);
 
     /// @dev Start a new family. The msg.sender must already be registered as a person.
     /// @param familyName name of the family
@@ -42,11 +53,11 @@ contract Families {
     function startFamily(string memory familyName) public returns (uint256) {
         require(
             !stringsEqual(familyName, ""),
-            "family name cannot be the empty string"
+            "name cannot be the empty string"
         );
         require(
             !families[nameToFamily[familyName]].valid,
-            "family name already taken"
+            "name already taken"
         );
 
         Family memory family =
@@ -63,7 +74,75 @@ contract Families {
         familyMembers[family.id] = personID;
         personFamilies[personID] = family.id;
 
+        emit JoinedFamily(family.id, personID);
+
         return family.id;
+    }
+
+    /// @dev Retrieve a person ID by their account
+    /// @param account account address of the person
+    /// @return person ID
+    function getPersonIDByAccount(address account)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 id = accountToPerson[account];
+        require(
+            people[id].valid && people[id].account == account,
+            "account is not registered to a person"
+        );
+        return id;
+    }
+
+    /// @dev Add a person
+    /// @param personName the person's name
+    /// @param avatar the person's avatar
+    /// @return person ID
+    function addPerson(string memory personName, string memory avatar)
+        internal
+        returns (uint256)
+    {
+        require(
+            !stringsEqual(personName, ""),
+            "name cannot be the empty string"
+        );
+        require(!people[nameToPerson[personName]].valid, "name already taken");
+        require(
+            !people[accountToPerson[msg.sender]].valid,
+            "account is already registered to a person"
+        );
+
+        Person memory person =
+            Person({
+                id: people.length,
+                account: msg.sender,
+                name: personName,
+                avatar: avatar,
+                valid: true
+            });
+
+        people.push(person);
+        nameToPerson[personName] = person.id;
+        accountToPerson[msg.sender] = person.id;
+
+        emit PersonAdded(person.id, person.account, personName, avatar);
+    }
+
+    /// @dev Start a new family. The msg.sender will also be registered as a person.
+    /// @param familyName name of the family
+    /// @param personName the person's name
+    /// @param avatar the person's avatar
+    /// @return IDs of the newly created family and person
+    function startFirstFamily(
+        string memory familyName,
+        string memory personName,
+        string memory avatar
+    ) public returns (uint256, uint256) {
+        uint256 personID = addPerson(personName, avatar);
+        uint256 familyID = startFamily(familyName);
+
+        return (familyID, personID);
     }
 
     /// @dev Retrieve a person ID by their account
