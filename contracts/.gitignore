@@ -1,4 +1,4 @@
 node_modules
-build
+build/contracts/Migrations.json
 package-lock.json
 .env
