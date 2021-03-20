@@ -41,12 +41,15 @@ contract Families {
         string name,
         address indexed personAccount
     );
+    event FamilyNameSet(address indexed account, string name);
     event PersonAdded(
         uint256 indexed id,
         address indexed account,
         string name,
         string avatar
     );
+    event PersonNameSet(address indexed account, string name);
+    event PersonAvatarSet(address indexed account, string avatar);
     event JoinedFamily(uint256 indexed familyID, address indexed account);
     event LeftFamily(uint256 indexed familyID, address indexed account);
     event InviteAdded(
@@ -93,6 +96,26 @@ contract Families {
         return family.id;
     }
 
+    /// @dev Update a family's name
+    /// @param familyID family ID
+    /// @param familyName new family name
+    function setFamilyName(uint256 familyID, string memory familyName) public {
+        require(
+            !stringsEqual(familyName, ""),
+            "name cannot be the empty string"
+        );
+        uint256 personID = getPersonIDByAccount(msg.sender);
+
+        require(
+            familyRoles[familyID][personID] == RoleResponsibleAdult,
+            "not a responsible adult"
+        );
+
+        families[familyID].name = familyName;
+
+        emit FamilyNameSet(msg.sender, familyName);
+    }
+
     /// @dev Retrieve a person ID by their account
     /// @param account account address of the person
     /// @return person ID
@@ -123,6 +146,7 @@ contract Families {
             !stringsEqual(personName, ""),
             "name cannot be the empty string"
         );
+        require(!stringsEqual(avatar, ""), "avatar cannot be the empty string");
         require(
             people.length == 0 ||
                 people[accountToPerson[msg.sender]].account != msg.sender,
@@ -142,6 +166,31 @@ contract Families {
         accountToPerson[msg.sender] = person.id;
 
         emit PersonAdded(person.id, person.account, personName, avatar);
+    }
+
+    /// @dev Update a person's name
+    /// @param personName the person's new name
+    function setPersonName(string memory personName) public {
+        require(
+            !stringsEqual(personName, ""),
+            "name cannot be the empty string"
+        );
+        uint256 personID = getPersonIDByAccount(msg.sender);
+
+        people[personID].name = personName;
+
+        emit PersonNameSet(msg.sender, personName);
+    }
+
+    /// @dev Update a person's avatar
+    /// @param avatar the person's avatar
+    function setPersonAvatar(string memory avatar) public {
+        require(!stringsEqual(avatar, ""), "name cannot be the empty string");
+        uint256 personID = getPersonIDByAccount(msg.sender);
+
+        people[personID].avatar = avatar;
+
+        emit PersonAvatarSet(msg.sender, avatar);
     }
 
     /// @dev Start a new family. The msg.sender will also be registered as a person.
