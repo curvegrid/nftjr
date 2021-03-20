@@ -10,7 +10,6 @@ contract Families {
     struct Family {
         uint256 id;
         string name;
-        bool valid;
     }
 
     Family[] public families;
@@ -21,16 +20,16 @@ contract Families {
         address account;
         string name;
         string avatar;
-        bool valid;
+        uint256 role; // only sometimes filled in
     }
 
     Person[] public people;
-    mapping(string => uint256) public nameToPerson; // personName => personID
     mapping(address => uint256) public accountToPerson; // account => personID
 
     // note: this is not the way to do this for production, but we're taking a shortcut for a hackathon
-    mapping(uint256 => uint256) public familyMembers; // familyID => personID
-    mapping(uint256 => uint256) public personFamilies; // personID => familyID
+    mapping(uint256 => mapping(uint256 => bool)) public familyMembers; // familyID => personID => valid
+    mapping(uint256 => uint256) public familyMembersCount; // familyID => person count
+    mapping(uint256 => mapping(uint256 => uint256)) public familyRoles; // familyID => personID => role
 
     constructor() public {
         owner = msg.sender;
@@ -49,6 +48,11 @@ contract Families {
     );
     event JoinedFamily(uint256 indexed familyID, uint256 indexed personID);
 
+	uint256 public constant RoleNone = 0;
+    uint256 public constant RoleResponsibleAdult = 1;
+    uint256 public constant RoleAdult = 2;
+    uint256 public constant RoleChild = 3;
+
     /// @dev Start a new family. The msg.sender must already be registered as a person.
     /// @param familyName name of the family
     /// @return ID of the newly created family
@@ -57,13 +61,8 @@ contract Families {
             !stringsEqual(familyName, ""),
             "name cannot be the empty string"
         );
-        require(
-            !families[nameToFamily[familyName]].valid,
-            "name already taken"
-        );
 
-        Family memory family =
-            Family({id: families.length, name: familyName, valid: true});
+        Family memory family = Family({id: families.length, name: familyName});
 
         families.push(family);
         nameToFamily[familyName] = family.id;
@@ -73,8 +72,9 @@ contract Families {
         // add this person to the family
         uint256 personID = getPersonIDByAccount(msg.sender);
 
-        familyMembers[family.id] = personID;
-        personFamilies[personID] = family.id;
+        familyMembers[family.id][personID] = true;
+        familyMembersCount[family.id]++;
+        familyRoles[family.id][personID] = RoleResponsibleAdult;
 
         emit JoinedFamily(family.id, personID);
 
@@ -91,7 +91,9 @@ contract Families {
     {
         uint256 id = accountToPerson[account];
         require(
-            people[id].valid && people[id].account == account,
+            id < people.length &&
+                people.length > 0 &&
+                people[id].account == account,
             "account is not registered to a person"
         );
         return id;
@@ -109,9 +111,9 @@ contract Families {
             !stringsEqual(personName, ""),
             "name cannot be the empty string"
         );
-        require(!people[nameToPerson[personName]].valid, "name already taken");
         require(
-            !people[accountToPerson[msg.sender]].valid,
+            people.length == 0 ||
+                people[accountToPerson[msg.sender]].account != msg.sender,
             "account is already registered to a person"
         );
 
@@ -121,11 +123,10 @@ contract Families {
                 account: msg.sender,
                 name: personName,
                 avatar: avatar,
-                valid: true
+				role: RoleNone
             });
 
         people.push(person);
-        nameToPerson[personName] = person.id;
         accountToPerson[msg.sender] = person.id;
 
         emit PersonAdded(person.id, person.account, personName, avatar);
@@ -191,6 +192,116 @@ contract Families {
         for (uint256 i = offset; i - offset < limit; i++) {
             selectPeople[i - offset] = people[i];
         }
+    }
+
+    /// @dev Retrieve family members
+    /// @param offset offset to return from
+    /// @param limit maximum number to return
+    /// @return people
+    function getFamilyMembers(
+        uint256 familyID,
+        uint256 offset,
+        uint256 limit
+    ) public view returns (Person[] memory) {
+        // note: this will not scale to production, but we're taking a shortcut for a hackathon
+        require(familyID < families.length, "invalid family ID");
+
+        // count forward by 'offset' matching people
+        uint256 start = 0;
+        uint256 count = 0;
+        for (uint256 i = 0; count < offset && i < people.length; i++) {
+            if (familyMembers[familyID][i]) {
+                start = i + 1;
+                count++;
+            }
+        }
+
+        // count the number of matching people
+        count = 0;
+        for (uint256 i = start; count < limit && i < people.length; i++) {
+            if (familyMembers[familyID][i]) {
+                count++;
+            }
+        }
+
+        Person[] memory selectPeople = new Person[](count);
+
+        uint256 j = 0;
+        for (uint256 i = start; j < count && i < people.length; i++) {
+            if (familyMembers[familyID][i]) {
+                selectPeople[j] = people[i];
+                selectPeople[j].role = familyRoles[familyID][i];
+                j++;
+            }
+        }
+
+        return selectPeople;
+    }
+
+    /// @dev Retrieve the families a person is a part of
+    /// @param offset offset to return from
+    /// @param limit maximum number to return
+    /// @return families
+    function getFamilyMemberships(
+        uint256 personID,
+        uint256 offset,
+        uint256 limit
+    ) public view returns (Family[] memory) {
+        // note: this will not scale to production, but we're taking a shortcut for a hackathon
+        require(personID < people.length, "invalid person ID");
+
+        // count forward by 'offset' matching families
+        uint256 start = 0;
+        uint256 count = 0;
+        for (uint256 i = 0; count < offset && i < families.length; i++) {
+            if (familyMembers[i][personID]) {
+                start = i + 1;
+                count++;
+            }
+        }
+
+        // count the number of matching families
+        count = 0;
+        for (uint256 i = start; count < limit && i < families.length; i++) {
+            if (familyMembers[i][personID]) {
+                count++;
+            }
+        }
+
+        Family[] memory selectFamilies = new Family[](count);
+
+        uint256 j = 0;
+        for (uint256 i = start; j < count && i < families.length; i++) {
+            if (familyMembers[i][personID]) {
+                selectFamilies[j] = families[i];
+                j++;
+            }
+        }
+
+        return selectFamilies;
+    }
+
+    /// @dev Generates an invite
+    /// @param nonce random nonce generated off-chain
+    /// @param role the role of the person
+    /// @return hashed invite
+    function generateInvite(
+        uint256 familyID,
+        address personAccount,
+        string memory nonce,
+        uint256 role
+    ) public view returns (bytes32) {
+        // note: this can be front-run in production, but we're taking a shortcut for a hackathon
+        uint256 personID = getPersonIDByAccount(personAccount);
+
+        require(
+            familyMembers[familyID][personID],
+            "account is not part of that family"
+        );
+
+        return (
+            keccak256(abi.encodePacked(familyID, personAccount, nonce, role))
+        );
     }
 
     /// @dev Check if two strings are equal
