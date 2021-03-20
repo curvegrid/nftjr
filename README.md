@@ -1,2 +1,2 @@
-# ntfjr
+# nftjr
 NFT Junior
