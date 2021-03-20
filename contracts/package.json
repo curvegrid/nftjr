@@ -1,0 +1,27 @@
+{
+  "name": "nftjr",
+  "version": "0.1.0",
+  "description": "NFT Junior",
+  "main": "truffle-config.js",
+  "author": "Curvegrid Inc.",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "lint": "solhint ./contracts/**/*.sol",
+    "prettier": "prettier --write ./contracts/**/*.sol",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.3",
+    "solhint": "^3.3.2",
+    "solhint-plugin-prettier": "^0.0.5",
+    "truffle-multibaas-plugin": "^0.1.7"
+  }
+}

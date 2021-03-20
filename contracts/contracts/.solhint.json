@@ -1,0 +1,17 @@
+{
+    "extends": "solhint:default",
+    "plugins": ["prettier"],
+    "rules": {
+      "avoid-sha3": "error",
+      "avoid-suicide": "error",
+      "avoid-throw": "error",
+      "check-send-result": "error",
+      "func-visibility": "error",
+      "multiple-sends": "error",
+      "func-name-mixedcase": "error",
+      "use-forbidden-name": "error",
+      "var-name-mixedcase": "error",
+      "visibility-modifier-order": "error",
+      "max-line-length": "off"
+    }
+  }
