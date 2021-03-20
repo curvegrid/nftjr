@@ -30,6 +30,7 @@ contract Families {
     mapping(uint256 => mapping(uint256 => bool)) public familyMembers; // familyID => personID => valid
     mapping(uint256 => uint256) public familyMembersCount; // familyID => person count
     mapping(uint256 => mapping(uint256 => uint256)) public familyRoles; // familyID => personID => role
+    mapping(uint256 => mapping(bytes32 => bool)) public familyInvites; // familyID => hashed invite => valid
 
     constructor() public {
         owner = msg.sender;
@@ -46,9 +47,20 @@ contract Families {
         string name,
         string avatar
     );
-    event JoinedFamily(uint256 indexed familyID, uint256 indexed personID);
+    event JoinedFamily(uint256 indexed familyID, address indexed account);
+    event LeftFamily(uint256 indexed familyID, address indexed account);
+    event InviteAdded(
+        uint256 indexed familyID,
+        address indexed account,
+        bytes32 invite
+    );
+    event InviteRedeemed(
+        uint256 indexed familyID,
+        address indexed account,
+        bytes32 invite
+    );
 
-	uint256 public constant RoleNone = 0;
+    uint256 public constant RoleNone = 0;
     uint256 public constant RoleResponsibleAdult = 1;
     uint256 public constant RoleAdult = 2;
     uint256 public constant RoleChild = 3;
@@ -76,7 +88,7 @@ contract Families {
         familyMembersCount[family.id]++;
         familyRoles[family.id][personID] = RoleResponsibleAdult;
 
-        emit JoinedFamily(family.id, personID);
+        emit JoinedFamily(family.id, msg.sender);
 
         return family.id;
     }
@@ -123,7 +135,7 @@ contract Families {
                 account: msg.sender,
                 name: personName,
                 avatar: avatar,
-				role: RoleNone
+                role: RoleNone
             });
 
         people.push(person);
@@ -282,26 +294,107 @@ contract Families {
     }
 
     /// @dev Generates an invite
+    /// @param familyID family ID
     /// @param nonce random nonce generated off-chain
     /// @param role the role of the person
     /// @return hashed invite
     function generateInvite(
         uint256 familyID,
-        address personAccount,
         string memory nonce,
         uint256 role
-    ) public view returns (bytes32) {
-        // note: this can be front-run in production, but we're taking a shortcut for a hackathon
-        uint256 personID = getPersonIDByAccount(personAccount);
+    ) public pure returns (bytes32) {
+        return (keccak256(abi.encodePacked(familyID, nonce, role)));
+    }
+
+    /// @dev Adds an invite
+    /// @param familyID family ID
+    /// @param invite the hashed invite
+    function addInvite(uint256 familyID, bytes32 invite) public {
+        uint256 personID = getPersonIDByAccount(msg.sender);
 
         require(
             familyMembers[familyID][personID],
-            "account is not part of that family"
+            "not a member of that family"
+        );
+        require(
+            familyRoles[familyID][personID] == RoleResponsibleAdult,
+            "not a responsible adult"
         );
 
-        return (
-            keccak256(abi.encodePacked(familyID, personAccount, nonce, role))
+        familyInvites[familyID][invite] = true;
+
+        emit InviteAdded(familyID, msg.sender, invite);
+    }
+
+    /// @dev Join a family by invitation
+    /// @param familyID family ID
+    /// @param nonce random nonce generated off-chain
+    /// @param role the role of the person
+    function joinFamily(
+        uint256 familyID,
+        string memory nonce,
+        uint256 role
+    ) public {
+        // note: this can be front-run in production, but we're taking a shortcut for a hackathon
+        uint256 personID = getPersonIDByAccount(msg.sender);
+
+        // validate invite
+        bytes32 invite = generateInvite(familyID, nonce, role);
+        require(familyInvites[familyID][invite], "invalid invite");
+
+        // mark invite as used
+        familyInvites[familyID][invite] = false;
+        emit InviteRedeemed(familyID, msg.sender, invite);
+
+        // add them to the family
+        familyMembers[familyID][personID] = true;
+        familyMembersCount[familyID]++;
+        familyRoles[familyID][personID] = RoleResponsibleAdult;
+
+        emit JoinedFamily(familyID, msg.sender);
+    }
+
+    /// @dev Join a family by invitation, and add the person
+    /// @param familyID family ID
+    /// @param nonce random nonce generated off-chain
+    /// @param role the role of the person
+    /// @param personName the person's name
+    /// @param avatar the person's avatar
+    /// @return ID of the newly created person
+    function joinFirstFamily(
+        uint256 familyID,
+        string memory nonce,
+        uint256 role,
+        string memory personName,
+        string memory avatar
+    ) public returns (uint256) {
+        // note: this can be front-run in production, but we're taking a shortcut for a hackathon
+        uint256 personID = addPerson(personName, avatar);
+        joinFamily(familyID, nonce, role);
+
+        return personID;
+    }
+
+    /// @dev Remove a family member
+    /// @param familyID family ID
+    /// @param personID person ID to remove
+    function removeFamilyMember(uint256 familyID, uint256 personID) public {
+        uint256 senderPersonID = getPersonIDByAccount(msg.sender);
+
+        require(
+            familyMembers[familyID][personID],
+            "not a member of that family"
         );
+        require(
+            familyRoles[familyID][personID] == RoleResponsibleAdult ||
+                senderPersonID == personID,
+            "not a responsible adult"
+        );
+
+        familyMembers[familyID][personID] = false;
+        familyMembersCount[familyID]--;
+
+        emit LeftFamily(familyID, msg.sender);
     }
 
     /// @dev Check if two strings are equal
