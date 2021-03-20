@@ -13,7 +13,6 @@ module.exports = {
     development: {
       provider: new Provider(privateKey, MultiBaasDeploymentID),
       network_id: networkID,
-      chain_id: networkID,
     },
     gas: 8000000, // gas limit for each transaction (default: ~6700000)
     gasPrice: 1, // 1 wei (default: 100 gwei)
