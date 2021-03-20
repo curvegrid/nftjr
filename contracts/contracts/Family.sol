@@ -2,6 +2,8 @@
 
 pragma solidity ^0.6.0;
 
+pragma experimental ABIEncoderV2;
+
 contract Families {
     address public owner;
 
@@ -145,23 +147,51 @@ contract Families {
         return (familyID, personID);
     }
 
-    /// @dev Retrieve a person ID by their account
-    /// @param account account address of the person
-    /// @return person ID
-    function getPersonIDByAccount(address account)
+    /// @dev Retrieve families
+    /// @param offset offset to return from
+    /// @param limit maximum number to return
+    /// @return families
+    function getFamilies(uint256 offset, uint256 limit)
         public
         view
-        returns (uint256)
+        returns (Family[] memory)
     {
-        uint256 id = accountToPerson[account];
-        require(
-            people[id].valid && people[id].account == account,
-            "account is not registered to a person"
-        );
-        return id;
+        // note: this will not scale to production, but we're taking a shortcut for a hackathon
+        if (offset > families.length) {
+            limit = 0;
+        } else if (offset + limit > families.length) {
+            limit = families.length - offset;
+        }
+
+        Family[] memory selectFamilies = new Family[](limit);
+
+        for (uint256 i = offset; i - offset < limit; i++) {
+            selectFamilies[i - offset] = families[i];
+        }
     }
 
-    // note: this will not scale to production, but we're taking a shortcut for a hackathon
+    /// @dev Retrieve people
+    /// @param offset offset to return from
+    /// @param limit maximum number to return
+    /// @return people
+    function getPeople(uint256 offset, uint256 limit)
+        public
+        view
+        returns (Person[] memory)
+    {
+        // note: this will not scale to production, but we're taking a shortcut for a hackathon
+        if (offset > people.length) {
+            limit = 0;
+        } else if (offset + limit > people.length) {
+            limit = people.length - offset;
+        }
+
+        Person[] memory selectPeople = new Person[](limit);
+
+        for (uint256 i = offset; i - offset < limit; i++) {
+            selectPeople[i - offset] = people[i];
+        }
+    }
 
     /// @dev Check if two strings are equal
     /// @param a first string
