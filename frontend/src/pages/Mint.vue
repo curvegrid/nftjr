@@ -39,6 +39,28 @@
         max-width="250"
       ></v-img>
     </v-row>
+    <v-row align="center">
+      <v-col cols="6">
+        <p>Title</p>
+        <v-text-field></v-text-field>
+      </v-col>
+    </v-row>
+    <v-row align="center">
+      <v-col cols="6">
+        <p>Description</p>
+        <v-textarea></v-textarea>
+      </v-col>
+    </v-row>
+    <v-row align="center">
+      <v-btn
+          depressed
+          class="ma-6"
+          @click="mint"
+          color="primary"
+        >
+          Mint
+        </v-btn>
+    </v-row>
   </v-container>
 </template>
 
@@ -138,6 +160,9 @@
             this.imageURI = 'https://cloudflare-ipfs.com/ipfs/'+cid+'/'+filename
           }
         )
+      },
+      async mint() {
+        // compose the metadata
       }
     }
   }
