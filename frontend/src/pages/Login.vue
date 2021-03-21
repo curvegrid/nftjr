@@ -1,16 +1,25 @@
 <template>
-  <Dialogue/>
+  <Dialogue
+    title="Login"
+    buttonText="Log in using web3"
+    :onClick="login"
+  />
 </template>
 
 <script>
   import Dialogue from '../components/Dialogue';
 
   export default {
+    name: 'Login',
     components: {
       Dialogue
     },
-    name: 'Login',
     data: () => ({
     }),
+    methods: {
+      login() {
+        console.log('login')
+      }
+    }
   }
 </script>
