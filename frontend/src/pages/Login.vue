@@ -19,6 +19,8 @@
     methods: {
       login() {
         console.log('login')
+        window.ethereum.request({ method: 'eth_requestAccounts' })
+        this.$store.dispatch('ethers/connect')
       }
     }
   }

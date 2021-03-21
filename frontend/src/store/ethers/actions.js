@@ -49,7 +49,7 @@ export default {
           Current Block #: ${await provider.getBlockNumber()}
           Your ether balance: ${await provider.getBalance(address)}
           If you change your address or network, this app will update automatically.`
-        alert(msg)
+        console.log(msg)
 
         // Other vuex stores can wait for this
         event.$emit(EVENT_CHANNEL, MSGS.ETHERS_VUEX_READY)
@@ -83,17 +83,17 @@ export default {
     const msg = err ? `There was an error: ${err.message}` : (oldAddress
       ? 'You have been disconnected from your Ethereum connection. Please check MetaMask, etc.'
       : 'You are not connected to an Ethereum node and wallet. Please check MetaMask, etc.')
-    alert(msg)
+    console.warn(msg)
   },
   async logout(ctx) {
     ctx.commit('address', '')
     ctx.commit('user', '')
-    alert('You have been logged out from your Ethereum connection')
+    console.warn('You have been logged out from your Ethereum connection')
   },
   async notConnected(ctx) {
     ctx.commit('address', '')
     ctx.commit('user', '')
-    alert('You are not connected to the Ethereum network. Please check MetaMask,etc.')
+    console.warn('You are not connected to the Ethereum network. Please check MetaMask,etc.')
   },
   async init(ctx) {
 
@@ -122,9 +122,9 @@ export default {
       console.log('Log in to your Ethereum wallet to see what it can do!')
       // Usually should trigger connect on a user interaction as a best practice!
       // Replace this with a user button??
-      if (confirm('Welcome! You can replace "alert" and "confirm" statements in this vuex module with your own code to do more useful things. If you would like to connect to your Ethereum provider (e.g. MetaMask) for the first time click "Yes" now.')) {
-        await connect()
-      }
+    //  if (confirm('Welcome! You can replace "alert" and "confirm" statements in this vuex module with your own code to do more useful things. If you would like to connect to your Ethereum provider (e.g. MetaMask) for the first time click "Yes" now.')) {
+    //     await connect()
+    //  }
     }
     ctx.commit('initialized', true)
   }
