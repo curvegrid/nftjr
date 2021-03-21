@@ -30,20 +30,10 @@ func ReverseProxyHandler(target *url.URL) echo.HandlerFunc {
 		proxy.ErrorHandler = func(res http.ResponseWriter, req *http.Request, e error) {
 			err = echo.NewHTTPError(http.StatusBadGateway, fmt.Sprintf("remote %s unreachable, could not forward: %v", target, e))
 		}
-		// proxy.ModifyResponse = func(res *http.Response) error {
-		// 	res.Header.Del("Strict-Transport-Security")
-		// 	return nil
-		// }
 
 		// replace the authorization header in the request
 		req.Header.Del("Authorization")
 		req.Header.Add("Authorization", "Bearer "+config.StorageToken)
-
-		// reqDump, err := httputil.DumpRequest(req, false)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// fmt.Printf("Request: '%s'\n", string(reqDump))
 
 		fmt.Printf("Uploaded a file from %v\n", req.RemoteAddr)
 

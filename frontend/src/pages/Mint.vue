@@ -43,7 +43,7 @@
       <v-col cols="6">
         <p>Title</p>
         <v-text-field
-          :value="title"
+          v-model="title"
         ></v-text-field>
       </v-col>
     </v-row>
@@ -51,7 +51,7 @@
       <v-col cols="6">
         <p>Description</p>
         <v-textarea
-          :value="description"
+          v-model="description"
         ></v-textarea>
       </v-col>
     </v-row>
@@ -218,6 +218,11 @@
         }
         const mintResponse = await axios.post('/zora_media/contracts/zora_media/methods/mint',body)
         console.log(mintResponse)
+
+        const wallet = await ethers.getWallet()
+        const tx = mintResponse.data.result.tx;
+        const ethersTx = ethers.formatEthersTx(tx)
+        await wallet.sendTransaction(ethersTx)
       }
     }
   }
