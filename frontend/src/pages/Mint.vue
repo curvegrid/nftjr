@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row align="center">
-      <v-col cols="6">
+      <!-- <v-col cols="6">
         <v-btn
           depressed
           class="ma-6"
@@ -10,7 +10,7 @@
         >
           Init
         </v-btn> 
-      </v-col>
+      </v-col>-->
     </v-row>
     <v-row align="center">
       <v-col cols="4">
@@ -87,6 +87,11 @@
       title: '',
       description: ''
     }),
+    mounted: function() {
+      this.$nextTick(function () {
+        setTimeout(this.init, 2000)
+      })
+    },
     methods: {
       async getFamily(address) {
         const body = {
