@@ -42,8 +42,10 @@
         const addr = await ethers.getWalletAddress()
         const family = await this.getFamily(addr)
         if (family !== null) {
+          console.log('Found family', family)
           this.$router.push('/family')
         } else {
+          console.log("Family not found, let's make one", family)
           this.$router.push('/first_family')
         }
       }
