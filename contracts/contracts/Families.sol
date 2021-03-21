@@ -497,4 +497,22 @@ contract Families {
 
         return familyMembers[familyID][personID];
     }
+
+    /// @dev Is someone an adult
+    /// @param familyID family ID
+    /// @param personAccount account of the person to check
+    function areTheyAnAdult(uint256 familyID, address personAccount)
+        public
+        view
+        returns (bool)
+    {
+        uint256 personID = getPersonIDByAccount(personAccount);
+
+        require(
+            familyMembers[familyID][personID],
+            "not a member of that family"
+        );
+        return (familyRoles[familyID][personID] == RoleResponsibleAdult ||
+            familyRoles[familyID][personID] == RoleAdult);
+    }
 }
