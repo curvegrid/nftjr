@@ -3,7 +3,7 @@ import App from './App.vue'
 import vuetify from './plugins/vuetify';
 import VueRouter from 'vue-router'
 
-import Login from './components/Login'
+import Login from './pages/Login'
 
 Vue.config.productionTip = false
 Vue.use(VueRouter)
