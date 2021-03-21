@@ -68,6 +68,10 @@ export async function getNetName() {
       return 'Goerli Test Network'
     case '0x2a':
       return 'Kovan Test Network';
+    case '0x64f6':
+      return 'Localhost Test Network'
+    case '0x783A1511':
+      return 'Curvegrid Test Network'
     case undefined:
     case null:
       return 'No Chain!'
