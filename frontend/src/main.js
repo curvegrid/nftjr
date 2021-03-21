@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import FirstFamily from './pages/FirstFamily'
 import Family from './pages/Family'
 import Avatar from './pages/Avatar'
+import Mint from './pages/Mint'
 import store from './store'
 
 Vue.config.productionTip = false
@@ -18,7 +19,8 @@ const router = new VueRouter({
     { path: '/login', component: Login },
     { path: '/first_family', component: FirstFamily },
     { path: '/family', component: Family },
-    { path: '/avatar', component: Avatar }
+    { path: '/avatar', component: Avatar },
+    { path: '/mint', component: Mint }
   ],
   mode: 'history'
 })
