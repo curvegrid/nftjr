@@ -42,13 +42,17 @@
     <v-row align="center">
       <v-col cols="6">
         <p>Title</p>
-        <v-text-field></v-text-field>
+        <v-text-field
+          :value="title"
+        ></v-text-field>
       </v-col>
     </v-row>
     <v-row align="center">
       <v-col cols="6">
         <p>Description</p>
-        <v-textarea></v-textarea>
+        <v-textarea
+          :value="description"
+        ></v-textarea>
       </v-col>
     </v-row>
     <v-row align="center">
@@ -79,7 +83,9 @@
       account: '',
       familyMembers: [],
       mintFor: '',
-      imageURI: ''
+      imageURI: '',
+      title: '',
+      description: ''
     }),
     methods: {
       async getFamily(address) {
@@ -161,8 +167,57 @@
           }
         )
       },
+      async storeMetadata(metadata) {
+        const URL = 'http://localhost:8090/upload';
+        let config = {
+          header : {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+        }
+
+        const response = await axiosNFT.post(
+          URL, 
+          metadata,
+          config
+        );
+
+        return response;
+      },
       async mint() {
         // compose the metadata
+        const metadata = {
+          description: this.description,
+          mimeType: "image/png",
+          name: this.title,
+          version: "zora-20210101"
+        }
+
+        console.log(metadata)
+
+        // store the metadata
+        const metadataResponse = await this.storeMetadata(metadata)
+        const metadataURI = 'https://cloudflare-ipfs.com/ipfs/'+metadataResponse.data.value.cid
+        console.log(metadataURI)
+
+        // mint the NFT!
+        const media = [
+          this.imageURI,
+          metadataURI,
+          "0x065bf07e259e61ca4857290019e39c5af63535b63077f602abc3a9f3032c4972",
+          "0xf0e4c2f76c58916ec258f246851bea091d14d4247a2fc3e18694461b1816e13b",
+          this.family.id
+        ];
+        const bidShares = [[0],[0],[100000000000000000000]]
+        const body = {
+          args: [
+            media,
+            bidShares
+          ],
+          "from": this.mintFor
+        }
+        const mintResponse = await axios.post('/zora_media/contracts/zora_media/methods/mint',body)
+        console.log(mintResponse)
       }
     }
   }
