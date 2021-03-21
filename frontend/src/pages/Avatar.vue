@@ -71,7 +71,8 @@
           from: addr
         }
         const response = await axios.post('/families/contracts/families/methods/startFirstFamily',body)
-        return response.data.result.output
+        console.log(response)
+        return response.data.result.tx
       },
       async startFamily() {
         const addr = await ethers.getWalletAddress()
@@ -82,6 +83,7 @@
           from: addr
         }
         const response = await axios.post('/families/contracts/families/methods/startFamily',body)
+        console.log(response)
         return response.data.result.tx
       },
       async confirm() {

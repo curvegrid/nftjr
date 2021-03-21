@@ -40,12 +40,17 @@
         window.ethereum.request({ method: 'eth_requestAccounts' })
         this.$store.dispatch('ethers/connect')
         const addr = await ethers.getWalletAddress()
-        const family = await this.getFamily(addr)
-        if (family !== null) {
+        let family
+        try {
+          family = await this.getFamily(addr)
+        } catch(e) {
+          console.log('Failed to get family', e)
+        }
+        if (typeof(family) !== 'undefined') {
           console.log('Found family', family)
           this.$router.push('/family')
         } else {
-          console.log("Family not found, let's make one", family)
+          console.log("Family not found, let's make one")
           this.$router.push('/first_family')
         }
       }
