@@ -16,3 +16,6 @@
 
 # Mac nonsense
 .DS_Store
+
+# VSCode user-specific
+.vscode

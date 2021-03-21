@@ -4,6 +4,7 @@ import vuetify from './plugins/vuetify';
 import VueRouter from 'vue-router'
 
 import Login from './pages/Login'
+import Mint from './pages/Mint'
 import store from './store'
 
 Vue.config.productionTip = false
@@ -12,7 +13,8 @@ Vue.use(VueRouter)
 const router = new VueRouter({
   routes: [
     // dynamic segments start with a colon
-    { path: '/login', component: Login }
+    { path: '/login', component: Login },
+    { path: '/mint', component: Mint }
   ],
   mode: 'history'
 })
