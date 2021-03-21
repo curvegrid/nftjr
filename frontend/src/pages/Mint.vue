@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row align="center">
-      <v-col cols="6">
+      <!-- <v-col cols="6">
         <v-btn
           depressed
           class="ma-6"
@@ -10,7 +10,7 @@
         >
           Init
         </v-btn> 
-      </v-col>
+      </v-col>-->
     </v-row>
     <v-row align="center">
       <v-col cols="4">
@@ -43,7 +43,7 @@
       <v-col cols="6">
         <p>Title</p>
         <v-text-field
-          :value="title"
+          v-model="title"
         ></v-text-field>
       </v-col>
     </v-row>
@@ -51,7 +51,7 @@
       <v-col cols="6">
         <p>Description</p>
         <v-textarea
-          :value="description"
+          v-model="description"
         ></v-textarea>
       </v-col>
     </v-row>
@@ -72,6 +72,7 @@
   import ethers from '../store/ethers/ethersConnect';
   import axios from '../../axios_with_config';
   import axiosNFT from 'axios';
+  import sha256 from 'js-sha256';
 
   export default {
     name: 'Mint',
@@ -87,6 +88,11 @@
       title: '',
       description: ''
     }),
+    mounted: function() {
+      this.$nextTick(function () {
+        setTimeout(this.init, 2000)
+      })
+    },
     methods: {
       async getFamily(address) {
         const body = {
@@ -204,10 +210,11 @@
         const media = [
           this.imageURI,
           metadataURI,
-          "0x065bf07e259e61ca4857290019e39c5af63535b63077f602abc3a9f3032c4972",
-          "0xf0e4c2f76c58916ec258f246851bea091d14d4247a2fc3e18694461b1816e13b",
+          '0x'+sha256(JSON.stringify(metadata)),
+          '0x'+sha256(JSON.stringify(metadata)+"metadata"),
           this.family.id
         ];
+        console.log(media)
         const bidShares = [[0],[0],[100000000000000000000]]
         const body = {
           args: [
@@ -218,6 +225,11 @@
         }
         const mintResponse = await axios.post('/zora_media/contracts/zora_media/methods/mint',body)
         console.log(mintResponse)
+
+        const wallet = await ethers.getWallet()
+        const tx = mintResponse.data.result.tx;
+        const ethersTx = ethers.formatEthersTx(tx)
+        await wallet.sendTransaction(ethersTx)
       }
     }
   }
