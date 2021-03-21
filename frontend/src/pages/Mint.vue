@@ -34,7 +34,7 @@
     </v-row>
     <v-row align="center">
       <v-img 
-        :src="image"
+        :src="imageURI"
         max-height="250"
         max-width="250"
       ></v-img>
@@ -57,7 +57,7 @@
       account: '',
       familyMembers: [],
       mintFor: '',
-      image: ''
+      imageURI: ''
     }),
     methods: {
       async getFamily(address) {
@@ -135,7 +135,7 @@
             const cid = response.data.value.cid
             const filename = response.data.value.files[0].name
             console.log('image upload response > ', cid)
-            this.image = 'https://cloudflare-ipfs.com/ipfs/'+cid+'/'+filename
+            this.imageURI = 'https://cloudflare-ipfs.com/ipfs/'+cid+'/'+filename
           }
         )
       }
