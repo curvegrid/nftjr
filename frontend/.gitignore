@@ -2,6 +2,8 @@
 node_modules
 /dist
 
+# Backend API config
+axios_with_config.js
 
 # local env files
 .env.local
