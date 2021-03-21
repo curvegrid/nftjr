@@ -3,7 +3,8 @@ import Vue from 'vue'
 import {
   providers,
   Contract as ContractModule,
-  utils as utilsModule
+  utils as utilsModule,
+  BigNumber
 } from 'ethers'
 
 export const PROVIDER_CHECK_MS = 500
@@ -229,6 +230,21 @@ export async function stopWatchProvider() {
   providerInterval = null
 }
 
+// formatEthersTx is used to prepare transactions received from the MultiBaas API
+// for submission on the frontend by ethers.js
+// This helper renames the gas field to gasLimit, and deletes some fields that
+// prevent ethers.js from being able to submit the transaction
+export function formatEthersTx(txFromAPI) {
+  const tx = JSON.parse(JSON.stringify(txFromAPI));
+  tx.gasLimit = tx.gas;
+  tx.gasPrice = BigNumber.from(tx.gasPrice);
+  tx.value = BigNumber.from(tx.value);
+  delete tx.gas;
+  delete tx.from;
+  delete tx.hash;
+  return tx;
+}
+
 // start ethereum provider checker
 startProviderWatcher()
 
@@ -241,5 +257,6 @@ export default {
   getWallet,
   getWalletAddress,
   getNetworkAddress,
+  formatEthersTx,
   ready
 }
