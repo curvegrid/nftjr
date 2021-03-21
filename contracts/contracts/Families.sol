@@ -304,12 +304,12 @@ contract Families {
     /// @param limit maximum number to return
     /// @return families
     function getFamilyMemberships(
-        uint256 personID,
+        address personAccount,
         uint256 offset,
         uint256 limit
     ) public view returns (Family[] memory) {
         // note: this will not scale to production, but we're taking a shortcut for a hackathon
-        require(personID < people.length, "invalid person ID");
+        uint256 personID = getPersonIDByAccount(personAccount);
 
         // count forward by 'offset' matching families
         uint256 start = 0;
