@@ -8,6 +8,7 @@
 
 <script>
   import Dialogue from '../components/Dialogue';
+  import ethers from '../store/ethers/ethersConnect';
 
   export default {
     name: 'Login',
@@ -17,10 +18,12 @@
     data: () => ({
     }),
     methods: {
-      login() {
+      async login() {
         console.log('login')
         window.ethereum.request({ method: 'eth_requestAccounts' })
         this.$store.dispatch('ethers/connect')
+        const addr = await ethers.getWalletAddress()
+        console.log(addr);
       }
     }
   }
