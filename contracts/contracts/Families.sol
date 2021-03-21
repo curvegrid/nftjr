@@ -205,14 +205,15 @@ contract Families {
 
     /// @dev Update a person's role in a family
     /// @param familyID family ID
-    /// @param personID person ID to update
+    /// @param personAccount account of the person update
     /// @param role new role
     function setPersonRoleInFamily(
         uint256 familyID,
-        uint256 personID,
+        address personAccount,
         uint256 role
     ) public {
         uint256 senderPersonID = getPersonIDByAccount(msg.sender);
+        uint256 personID = getPersonIDByAccount(personAccount);
 
         require(
             familyMembers[familyID][personID],
@@ -461,9 +462,12 @@ contract Families {
 
     /// @dev Remove a family member
     /// @param familyID family ID
-    /// @param personID person ID to remove
-    function removeFamilyMember(uint256 familyID, uint256 personID) public {
+    /// @param personAccount account of the person to remove
+    function removeFamilyMember(uint256 familyID, address personAccount)
+        public
+    {
         uint256 senderPersonID = getPersonIDByAccount(msg.sender);
+        uint256 personID = getPersonIDByAccount(personAccount);
 
         require(
             familyMembers[familyID][personID],
@@ -479,5 +483,18 @@ contract Families {
         familyMembersCount[familyID]--;
 
         emit LeftFamily(familyID, msg.sender);
+    }
+
+    /// @dev Is someone in a family
+    /// @param familyID family ID
+    /// @param personAccount account of the person to check
+    function areTheyFamily(uint256 familyID, address personAccount)
+        public
+        view
+        returns (bool)
+    {
+        uint256 personID = getPersonIDByAccount(personAccount);
+
+        return familyMembers[familyID][personID];
     }
 }
