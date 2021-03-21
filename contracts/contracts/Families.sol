@@ -50,7 +50,11 @@ contract Families {
     );
     event PersonNameSet(address indexed account, string name);
     event PersonAvatarSet(address indexed account, string avatar);
-    event JoinedFamily(uint256 indexed familyID, address indexed account);
+    event JoinedFamily(
+        uint256 indexed familyID,
+        address indexed account,
+        uint256 indexed role
+    );
     event LeftFamily(uint256 indexed familyID, address indexed account);
     event InviteAdded(
         uint256 indexed familyID,
@@ -61,6 +65,12 @@ contract Families {
         uint256 indexed familyID,
         address indexed account,
         bytes32 invite
+    );
+    event RoleSet(
+        address indexed account,
+        uint256 indexed familyID,
+        uint256 indexed personID,
+        uint256 role
     );
 
     uint256 public constant RoleNone = 0;
@@ -73,7 +83,7 @@ contract Families {
     /// @return ID of the newly created family
     function startFamily(string memory familyName) public returns (uint256) {
         require(
-            !stringsEqual(familyName, ""),
+            bytes(familyName).length > 0,
             "name cannot be the empty string"
         );
 
@@ -91,7 +101,7 @@ contract Families {
         familyMembersCount[family.id]++;
         familyRoles[family.id][personID] = RoleResponsibleAdult;
 
-        emit JoinedFamily(family.id, msg.sender);
+        emit JoinedFamily(family.id, msg.sender, RoleResponsibleAdult);
 
         return family.id;
     }
@@ -101,7 +111,7 @@ contract Families {
     /// @param familyName new family name
     function setFamilyName(uint256 familyID, string memory familyName) public {
         require(
-            !stringsEqual(familyName, ""),
+            bytes(familyName).length > 0,
             "name cannot be the empty string"
         );
         uint256 personID = getPersonIDByAccount(msg.sender);
@@ -143,10 +153,10 @@ contract Families {
         returns (uint256)
     {
         require(
-            !stringsEqual(personName, ""),
+            bytes(personName).length > 0,
             "name cannot be the empty string"
         );
-        require(!stringsEqual(avatar, ""), "avatar cannot be the empty string");
+        require(bytes(avatar).length > 0, "avatar cannot be the empty string");
         require(
             people.length == 0 ||
                 people[accountToPerson[msg.sender]].account != msg.sender,
@@ -172,7 +182,7 @@ contract Families {
     /// @param personName the person's new name
     function setPersonName(string memory personName) public {
         require(
-            !stringsEqual(personName, ""),
+            bytes(personName).length > 0,
             "name cannot be the empty string"
         );
         uint256 personID = getPersonIDByAccount(msg.sender);
@@ -185,12 +195,38 @@ contract Families {
     /// @dev Update a person's avatar
     /// @param avatar the person's avatar
     function setPersonAvatar(string memory avatar) public {
-        require(!stringsEqual(avatar, ""), "name cannot be the empty string");
+        require(bytes(avatar).length > 0, "name cannot be the empty string");
         uint256 personID = getPersonIDByAccount(msg.sender);
 
         people[personID].avatar = avatar;
 
         emit PersonAvatarSet(msg.sender, avatar);
+    }
+
+    /// @dev Update a person's role in a family
+    /// @param familyID family ID
+    /// @param personAccount account of the person update
+    /// @param role new role
+    function setPersonRoleInFamily(
+        uint256 familyID,
+        address personAccount,
+        uint256 role
+    ) public {
+        uint256 senderPersonID = getPersonIDByAccount(msg.sender);
+        uint256 personID = getPersonIDByAccount(personAccount);
+
+        require(
+            familyMembers[familyID][personID],
+            "not a member of that family"
+        );
+        require(
+            familyRoles[familyID][senderPersonID] == RoleResponsibleAdult,
+            "not a responsible adult"
+        );
+
+        familyRoles[familyID][personID] = role;
+
+        emit RoleSet(msg.sender, familyID, personID, role);
     }
 
     /// @dev Start a new family. The msg.sender will also be registered as a person.
@@ -398,9 +434,9 @@ contract Families {
         // add them to the family
         familyMembers[familyID][personID] = true;
         familyMembersCount[familyID]++;
-        familyRoles[familyID][personID] = RoleResponsibleAdult;
+        familyRoles[familyID][personID] = role;
 
-        emit JoinedFamily(familyID, msg.sender);
+        emit JoinedFamily(familyID, msg.sender, role);
     }
 
     /// @dev Join a family by invitation, and add the person
@@ -426,16 +462,19 @@ contract Families {
 
     /// @dev Remove a family member
     /// @param familyID family ID
-    /// @param personID person ID to remove
-    function removeFamilyMember(uint256 familyID, uint256 personID) public {
+    /// @param personAccount account of the person to remove
+    function removeFamilyMember(uint256 familyID, address personAccount)
+        public
+    {
         uint256 senderPersonID = getPersonIDByAccount(msg.sender);
+        uint256 personID = getPersonIDByAccount(personAccount);
 
         require(
             familyMembers[familyID][personID],
             "not a member of that family"
         );
         require(
-            familyRoles[familyID][personID] == RoleResponsibleAdult ||
+            familyRoles[familyID][senderPersonID] == RoleResponsibleAdult ||
                 senderPersonID == personID,
             "not a responsible adult"
         );
@@ -446,15 +485,16 @@ contract Families {
         emit LeftFamily(familyID, msg.sender);
     }
 
-    /// @dev Check if two strings are equal
-    /// @param a first string
-    /// @param b second string
-    function stringsEqual(string memory a, string memory b)
+    /// @dev Is someone in a family
+    /// @param familyID family ID
+    /// @param personAccount account of the person to check
+    function areTheyFamily(uint256 familyID, address personAccount)
         public
-        pure
+        view
         returns (bool)
     {
-        return (keccak256(abi.encodePacked((a))) ==
-            keccak256(abi.encodePacked((b))));
+        uint256 personID = getPersonIDByAccount(personAccount);
+
+        return familyMembers[familyID][personID];
     }
 }
