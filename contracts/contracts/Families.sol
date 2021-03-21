@@ -50,7 +50,11 @@ contract Families {
     );
     event PersonNameSet(address indexed account, string name);
     event PersonAvatarSet(address indexed account, string avatar);
-    event JoinedFamily(uint256 indexed familyID, address indexed account);
+    event JoinedFamily(
+        uint256 indexed familyID,
+        address indexed account,
+        uint256 indexed role
+    );
     event LeftFamily(uint256 indexed familyID, address indexed account);
     event InviteAdded(
         uint256 indexed familyID,
@@ -61,6 +65,12 @@ contract Families {
         uint256 indexed familyID,
         address indexed account,
         bytes32 invite
+    );
+    event RoleSet(
+        address indexed account,
+        uint256 indexed familyID,
+        uint256 indexed personID,
+        uint256 role
     );
 
     uint256 public constant RoleNone = 0;
@@ -91,7 +101,7 @@ contract Families {
         familyMembersCount[family.id]++;
         familyRoles[family.id][personID] = RoleResponsibleAdult;
 
-        emit JoinedFamily(family.id, msg.sender);
+        emit JoinedFamily(family.id, msg.sender, RoleResponsibleAdult);
 
         return family.id;
     }
@@ -191,6 +201,31 @@ contract Families {
         people[personID].avatar = avatar;
 
         emit PersonAvatarSet(msg.sender, avatar);
+    }
+
+    /// @dev Update a person's role in a family
+    /// @param familyID family ID
+    /// @param personID person ID to update
+    /// @param role new role
+    function setPersonRoleInFamily(
+        uint256 familyID,
+        uint256 personID,
+        uint256 role
+    ) public {
+        uint256 senderPersonID = getPersonIDByAccount(msg.sender);
+
+        require(
+            familyMembers[familyID][personID],
+            "not a member of that family"
+        );
+        require(
+            familyRoles[familyID][senderPersonID] == RoleResponsibleAdult,
+            "not a responsible adult"
+        );
+
+        familyRoles[familyID][personID] = role;
+
+        emit RoleSet(msg.sender, familyID, personID, role);
     }
 
     /// @dev Start a new family. The msg.sender will also be registered as a person.
@@ -398,9 +433,9 @@ contract Families {
         // add them to the family
         familyMembers[familyID][personID] = true;
         familyMembersCount[familyID]++;
-        familyRoles[familyID][personID] = RoleResponsibleAdult;
+        familyRoles[familyID][personID] = role;
 
-        emit JoinedFamily(familyID, msg.sender);
+        emit JoinedFamily(familyID, msg.sender, role);
     }
 
     /// @dev Join a family by invitation, and add the person
@@ -435,7 +470,7 @@ contract Families {
             "not a member of that family"
         );
         require(
-            familyRoles[familyID][personID] == RoleResponsibleAdult ||
+            familyRoles[familyID][senderPersonID] == RoleResponsibleAdult ||
                 senderPersonID == personID,
             "not a responsible adult"
         );
