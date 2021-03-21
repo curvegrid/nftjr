@@ -6,6 +6,7 @@ import VueRouter from 'vue-router'
 import Login from './pages/Login'
 import FirstFamily from './pages/FirstFamily'
 import Family from './pages/Family'
+import Avatar from './pages/Avatar'
 import store from './store'
 
 Vue.config.productionTip = false
@@ -16,7 +17,8 @@ const router = new VueRouter({
     // dynamic segments start with a colon
     { path: '/login', component: Login },
     { path: '/first_family', component: FirstFamily },
-    { path: '/family', component: Family }
+    { path: '/family', component: Family },
+    { path: '/avatar', component: Avatar }
   ],
   mode: 'history'
 })
