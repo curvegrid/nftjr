@@ -72,6 +72,7 @@
   import ethers from '../store/ethers/ethersConnect';
   import axios from '../../axios_with_config';
   import axiosNFT from 'axios';
+  import sha256 from 'js-sha256';
 
   export default {
     name: 'Mint',
@@ -209,10 +210,11 @@
         const media = [
           this.imageURI,
           metadataURI,
-          "0x065bf07e259e61ca4857290019e39c5af63535b63077f602abc3a9f3032c4972",
-          "0xf0e4c2f76c58916ec258f246851bea091d14d4247a2fc3e18694461b1816e13b",
+          '0x'+sha256(JSON.stringify(metadata)),
+          '0x'+sha256(JSON.stringify(metadata)+"metadata"),
           this.family.id
         ];
+        console.log(media)
         const bidShares = [[0],[0],[100000000000000000000]]
         const body = {
           args: [
