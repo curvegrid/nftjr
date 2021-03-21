@@ -19,7 +19,7 @@ const router = new VueRouter({
     { path: '/login', component: Login },
     { path: '/first_family', component: FirstFamily },
     { path: '/family', component: Family },
-    { path: '/avatar', component: Avatar }
+    { path: '/avatar', component: Avatar },
     { path: '/mint', component: Mint }
   ],
   mode: 'history'
