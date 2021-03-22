@@ -1,16 +1,16 @@
 <template>
   <v-container fluid>
     <v-row align="center">
-      <!-- <v-col cols="6">
+      <v-col cols="6">
         <v-btn
           depressed
           class="ma-6"
-          @click="init"
+          @click="store"
           color="primary"
         >
-          Init
+          Store
         </v-btn> 
-      </v-col>-->
+      </v-col>
     </v-row>
     <v-row align="center">
       <v-col cols="4">
@@ -172,6 +172,27 @@
             this.imageURI = 'https://cloudflare-ipfs.com/ipfs/'+cid+'/'+filename
           }
         )
+      },
+      async store() {
+        const metadata = {
+          test: "testing123"
+        };
+        const URL = 'https://nft.storage/api/upload';
+        let config = {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer <token goes here>' // this will work!
+          }
+        }
+
+        const response = await axiosNFT.post(
+          URL, 
+          metadata,
+          config
+        );
+
+        console.log(response);
       },
       async storeMetadata(metadata) {
         const URL = 'http://localhost:8090/upload';
