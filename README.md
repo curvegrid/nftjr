@@ -1,6 +1,8 @@
 # nftjr
 NFT Junior
 
+Submitted as an [entry](https://hack.ethglobal.co/showcase/nft-junior-recoDOcLpDwlHsyN3) to the [ETHGlobal NFTHack hackathon](https://nft.ethglobal.co/).
+
 ## Smart contracts setup
 
 First, setup the appropriate environment variables:
