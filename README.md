@@ -1,13 +1,23 @@
 # nftjr
 NFT Junior
 
+Submitted as an [entry](https://hack.ethglobal.co/showcase/nft-junior-recoDOcLpDwlHsyN3) to the [ETHGlobal NFTHack hackathon](https://nft.ethglobal.co/).
+
 ## Smart contracts setup
 
+First, setup the appropriate environment variables:
 ```
 cd contracts
+cp .env-sample .env
+```
+
+Then edit `.env` and add the appropriate API keys and web3 private key. Then:
+
+```
 yarn install
 truffle migrate --reset
 ```
+
 ## Frontend Setup
 
 ```
